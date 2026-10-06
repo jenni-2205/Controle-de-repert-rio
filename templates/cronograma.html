@@ -1,0 +1,307 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+    .cal-head { text-align: center; font-weight: 600; font-size: 0.85rem; color: var(--cor-primaria); padding: 8px 0; }
+    .cal-dia {
+        background: #fff; border-radius: 10px; min-height: 112px; padding: 8px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.03); position: relative; overflow: hidden;
+    }
+    .cal-dia.vazio { background: transparent; box-shadow: none; }
+    .cal-dia.hoje { outline: 2px solid var(--cor-secundaria); }
+    .cal-num { font-weight: 600; font-size: 0.9rem; }
+    .cal-add {
+        position: absolute; top: 4px; right: 6px; border: none; background: transparent;
+        color: #94a3b8; font-size: 1.1rem; line-height: 1; padding: 2px 4px; border-radius: 6px;
+    }
+    .cal-add:hover, .cal-add:focus-visible { color: var(--cor-secundaria); background: #eef2f7; }
+    .cal-evento {
+        display: block; width: 100%; text-align: left; border: none; border-radius: 6px;
+        font-size: 0.72rem; font-weight: 500; padding: 3px 6px; margin-top: 4px;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .ev-Semanal  { background: #dcfce7; color: #166534; }
+    .ev-Mensal   { background: #dbeafe; color: #1e40af; }
+    .ev-Especial { background: #fef3c7; color: #92400e; }
+
+    .picker { max-height: min(260px, 40vh); overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px; }
+    .picker .form-check { padding: 8px 12px 8px 2.2rem; border-bottom: 1px solid #f1f5f9; margin: 0; }
+    .picker .form-check:last-child { border-bottom: none; }
+
+    .cal-eventos { margin-top: 4px; }
+
+    @media (max-width: 767px) {
+        .cal-grid { gap: 3px; }
+        .cal-head { font-size: 0.72rem; padding: 4px 0; }
+        .cal-dia { min-height: 62px; padding: 4px; border-radius: 8px; }
+        .cal-num { font-size: 0.8rem; }
+        .cal-add { top: 0; right: 0; font-size: 1.1rem; padding: 4px 7px; }
+        /* No celular os repertórios viram bolinhas coloridas; os detalhes ficam na lista abaixo */
+        .cal-eventos { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 8px; }
+        .cal-evento { width: 10px; height: 10px; padding: 0; margin: 0; border-radius: 50%; font-size: 0; }
+        .cal-evento.ev-Semanal  { background: #22c55e; }
+        .cal-evento.ev-Mensal   { background: #3b82f6; }
+        .cal-evento.ev-Especial { background: #f59e0b; }
+    }
+</style>
+
+<!-- Cabeçalho do mês -->
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div class="d-flex align-items-center gap-2">
+        <a href="{{ url_for('cronograma', ano=ano_ant, mes=mes_ant) }}" class="btn btn-light rounded-3" title="Mês anterior"><i class="bi bi-chevron-left"></i></a>
+        <h4 class="fw-bold mb-0 text-center" style="color: var(--cor-primaria); min-width: 190px;">{{ nome_mes }} {{ ano }}</h4>
+        <a href="{{ url_for('cronograma', ano=ano_prox, mes=mes_prox) }}" class="btn btn-light rounded-3" title="Próximo mês"><i class="bi bi-chevron-right"></i></a>
+        <a href="{{ url_for('cronograma') }}" class="btn btn-outline-secondary rounded-3 ms-1">Hoje</a>
+    </div>
+    <button type="button" class="btn btn-modern" data-data="{{ data_padrao }}" onclick="abrirNovo(this.dataset.data)">
+        <i class="bi bi-calendar-plus me-1"></i> Adicionar Repertório
+    </button>
+</div>
+
+<!-- Calendário -->
+<div class="cal-grid mb-2">
+    {% for d in ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'] %}
+        <div class="cal-head">{{ d }}</div>
+    {% endfor %}
+</div>
+<div class="cal-grid">
+    {% for semana in semanas %}
+        {% for dia in semana %}
+            {% if dia == 0 %}
+                <div class="cal-dia vazio"></div>
+            {% else %}
+                <div class="cal-dia {% if hoje.year == ano and hoje.month == mes and hoje.day == dia %}hoje{% endif %}">
+                    <span class="cal-num">{{ dia }}</span>
+                    <button type="button" class="cal-add" data-data="{{ ano }}-{{ '%02d'|format(mes) }}-{{ '%02d'|format(dia) }}" onclick="abrirNovo(this.dataset.data)" title="Adicionar repertório em {{ dia }}/{{ mes }}" aria-label="Adicionar repertório em {{ dia }}/{{ mes }}">+</button>
+                    <div class="cal-eventos">{% for ev in eventos_por_dia.get(dia, []) %}
+                        <button type="button" class="cal-evento ev-{{ ev.tipo }}" data-bs-toggle="modal" data-bs-target="#verModal{{ ev.id }}" title="{{ ev.titulo }}">
+                            {{ ev.titulo }}
+                        </button>
+                    {% endfor %}</div>
+                </div>
+            {% endif %}
+        {% endfor %}
+    {% endfor %}
+</div>
+
+<!-- Lista dos repertórios do mês -->
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mt-4 mb-3">
+    <h5 class="fw-bold mb-0" style="color: var(--cor-primaria);">Repertórios de {{ nome_mes }}</h5>
+    <div class="small text-muted d-flex gap-2 flex-wrap">
+        <span class="badge ev-Semanal">Semanal</span>
+        <span class="badge ev-Mensal">Mensal</span>
+        <span class="badge ev-Especial">Especial</span>
+    </div>
+</div>
+<div class="list-group shadow-sm rounded-3">
+    {% for dia in eventos_por_dia|sort %}
+        {% for ev in eventos_por_dia[dia] %}
+        <button type="button" class="list-group-item list-group-item-action d-flex align-items-center gap-3 py-3" data-bs-toggle="modal" data-bs-target="#verModal{{ ev.id }}">
+            <span class="fw-bold text-center" style="min-width: 52px; color: var(--cor-primaria);">{{ '%02d'|format(dia) }}/{{ '%02d'|format(mes) }}</span>
+            <span class="flex-grow-1 text-start">
+                <span class="fw-medium d-block">{{ ev.titulo }}</span>
+                <span class="small text-muted">{{ ev.musicas|length }} música{{ '' if ev.musicas|length == 1 else 's' }}</span>
+            </span>
+            <span class="badge ev-{{ ev.tipo }}">{{ ev.tipo }}</span>
+        </button>
+        {% endfor %}
+    {% else %}
+        <div class="list-group-item text-center text-muted py-4">
+            Nenhum repertório neste mês. Toque em "Adicionar Repertório" para começar.
+        </div>
+    {% endfor %}
+</div>
+
+<!-- Modais de visualização de cada repertório agendado -->
+{% for dia, evs in eventos_por_dia.items() %}
+    {% for ev in evs %}
+    <div class="modal fade" id="verModal{{ ev.id }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-fullscreen-sm-down">
+            <div class="modal-content border-0" style="border-radius: 12px;">
+                <div class="modal-header border-bottom-0 pb-0">
+                    <div>
+                        <h5 class="modal-title fw-bold" style="color: var(--cor-primaria);">{{ ev.titulo }}</h5>
+                        <span class="text-muted small">{{ ev.data_br }} · {{ ev.tipo }}</span>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body p-4">
+                    {% if ev.musicas %}
+                    <ol class="list-group list-group-numbered">
+                        {% for m in ev.musicas %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span class="ms-2 me-auto">{{ m['titulo'] }}</span>
+                            {% if m['tom'] %}<span class="badge bg-light text-dark border me-2">{{ m['tom'] }}</span>{% endif %}
+                            {% if m['link'] %}<a href="{{ m['link'] }}" target="_blank" rel="noopener" title="Ouvir"><i class="bi bi-play-circle-fill fs-5"></i></a>{% endif %}
+                        </li>
+                        {% endfor %}
+                    </ol>
+                    {% else %}
+                    <p class="text-muted mb-0">Nenhuma música selecionada para este repertório.</p>
+                    {% endif %}
+                </div>
+                <div class="modal-footer border-top-0 pt-0 pb-4 pe-4">
+                    <form action="{{ url_for('deletar_do_cronograma', id=ev.id) }}" method="POST" class="me-auto" onsubmit="return confirm('Remover este repertório do cronograma?');">
+                        <input type="hidden" name="ano" value="{{ ano }}">
+                        <input type="hidden" name="mes" value="{{ mes }}">
+                        <button type="submit" class="btn btn-outline-danger rounded-3"><i class="bi bi-trash me-1"></i> Remover</button>
+                    </form>
+                    <button type="button" class="btn btn-outline-secondary rounded-3"
+                            data-id="{{ ev.id }}" data-data="{{ ev.data }}" data-tipo="{{ ev.tipo }}"
+                            data-titulo="{{ ev.titulo }}" data-musicas="{{ ev.musicas_ids }}"
+                            onclick="abrirEditar(this)">
+                        <i class="bi bi-pencil-square me-1"></i> Editar
+                    </button>
+                    <button type="button" class="btn btn-light rounded-3" data-bs-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+{% endfor %}
+
+<!-- Modal: adicionar repertório ao calendário -->
+<div class="modal fade" id="novoModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-fullscreen-sm-down">
+        <div class="modal-content border-0" style="border-radius: 12px;">
+            <div class="modal-header border-bottom-0 pb-0">
+                <h5 class="modal-title fw-bold" id="novo-titulo" style="color: var(--cor-primaria);">Adicionar Repertório</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <form id="form-novo" action="{{ url_for('adicionar_ao_cronograma') }}" method="POST">
+                <div class="modal-body p-4">
+                    <div class="row g-3 mb-3">
+                        <div class="col-sm-6">
+                            <label class="form-label text-muted small fw-bold text-uppercase">Data</label>
+                            <input type="date" class="form-control" name="data" id="campo-data" required>
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="form-label text-muted small fw-bold text-uppercase">Tipo</label>
+                            <select name="tipo" id="campo-tipo" class="form-select">
+                                <option value="Semanal">Culto Semanal</option>
+                                <option value="Mensal">Repertório Mensal</option>
+                                <option value="Especial">Culto Especial/Evento</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small fw-bold text-uppercase">Identificação</label>
+                        <input type="text" class="form-control" name="titulo" id="campo-titulo" placeholder="Ex: Domingo - Manhã" required>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-end mb-2">
+                        <label class="form-label text-muted small fw-bold text-uppercase mb-0">Músicas do repertório</label>
+                        <span class="small text-muted"><span id="contador">0</span> selecionadas</span>
+                    </div>
+                    <input type="search" id="busca-picker" class="form-control mb-2" placeholder="Buscar música...">
+                    <div class="picker">
+                        {% for m in todas_musicas %}
+                        <div class="form-check" data-titulo="{{ m['titulo']|lower }}">
+                            <input class="form-check-input picker-check" type="checkbox" value="{{ m['id'] }}" id="m{{ m['id'] }}">
+                            <label class="form-check-label w-100" for="m{{ m['id'] }}">
+                                {{ m['titulo'] }}
+                                {% if m['tom'] %}<span class="badge bg-light text-dark border ms-1">{{ m['tom'] }}</span>{% endif %}
+                            </label>
+                        </div>
+                        {% else %}
+                        <div class="p-3 text-muted small">
+                            Nenhuma música cadastrada ainda. <a href="{{ url_for('nova_musica') }}">Cadastre uma música</a> para montar o repertório.
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="form-text">As músicas ficam na ordem em que você as marca.</div>
+                    <div id="hidden-musicas"></div>
+                </div>
+                <div class="modal-footer border-top-0 pt-0 pb-4 pe-4">
+                    <button type="button" class="btn btn-light rounded-3" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-modern"><i class="bi bi-check2-circle me-1"></i> <span id="btn-salvar">Salvar no Calendário</span></button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const novoModal = new bootstrap.Modal(document.getElementById('novoModal'));
+    const form = document.getElementById('form-novo');
+    const checks = document.querySelectorAll('.picker-check');
+    let ordem = []; // ids na ordem em que foram marcados
+    const urlAdicionar = "{{ url_for('adicionar_ao_cronograma') }}";
+    const urlEditarBase = "{{ url_for('editar_cronograma', id=0) }}"; // termina em /0
+
+    function atualizarContador() {
+        document.getElementById('contador').textContent = ordem.length;
+    }
+
+    function prepararForm(modoEdicao) {
+        form.reset();
+        ordem = [];
+        document.getElementById('busca-picker').value = '';
+        document.querySelectorAll('.picker .form-check').forEach(el => el.style.display = '');
+        document.getElementById('novo-titulo').textContent = modoEdicao ? 'Editar Repertório' : 'Adicionar Repertório';
+        document.getElementById('btn-salvar').textContent = modoEdicao ? 'Salvar Alterações' : 'Salvar no Calendário';
+    }
+
+    function abrirNovo(dataISO) {
+        prepararForm(false);
+        form.action = urlAdicionar;
+        atualizarContador();
+        document.getElementById('campo-data').value = dataISO;
+        novoModal.show();
+    }
+
+    function abrirEditar(btn) {
+        const verEl = btn.closest('.modal');
+        const preencher = function () {
+            prepararForm(true);
+            form.action = urlEditarBase.replace(/0$/, btn.dataset.id);
+            document.getElementById('campo-data').value = btn.dataset.data;
+            document.getElementById('campo-tipo').value = btn.dataset.tipo;
+            document.getElementById('campo-titulo').value = btn.dataset.titulo;
+            // Marca as músicas atuais, mantendo a ordem salva
+            (btn.dataset.musicas ? btn.dataset.musicas.split(',') : []).forEach(function (id) {
+                const c = document.getElementById('m' + id);
+                if (c) { c.checked = true; ordem.push(id); }
+            });
+            atualizarContador();
+            novoModal.show();
+        };
+        // Fecha o modal de visualização e só então abre o de edição
+        verEl.addEventListener('hidden.bs.modal', preencher, { once: true });
+        bootstrap.Modal.getInstance(verEl).hide();
+    }
+
+    checks.forEach(function (c) {
+        c.addEventListener('change', function () {
+            if (c.checked) { ordem.push(c.value); }
+            else { ordem = ordem.filter(id => id !== c.value); }
+            atualizarContador();
+        });
+    });
+
+    // Filtro de busca dentro da lista de músicas
+    document.getElementById('busca-picker').addEventListener('input', function () {
+        const termo = this.value.toLowerCase().trim();
+        document.querySelectorAll('.picker .form-check').forEach(function (el) {
+            el.style.display = el.dataset.titulo.includes(termo) ? '' : 'none';
+        });
+    });
+
+    // Ao enviar, cria os campos ocultos na ordem escolhida
+    form.addEventListener('submit', function () {
+        const box = document.getElementById('hidden-musicas');
+        box.innerHTML = '';
+        ordem.forEach(function (id) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'musicas';
+            input.value = id;
+            box.appendChild(input);
+        });
+    });
+</script>
+{% endblock %}

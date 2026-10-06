@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IEAV - Gestão de Louvor</title>
+    
+    <!-- Configurações PWA (Aplicativo) -->
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <meta name="theme-color" content="#1F4E78">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='icone-192.png') }}">
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <!-- Google Fonts: Poppins -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --cor-primaria: #1F4E78;
+            --cor-secundaria: #2F5597;
+            --cor-fundo: #f4f7f6;
+            --cor-texto: #333;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--cor-fundo);
+            color: var(--cor-texto);
+        }
+
+        /* Navbar com Degradê */
+        .navbar-custom {
+            background: linear-gradient(135deg, var(--cor-primaria) 0%, var(--cor-secundaria) 100%);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 15px 0;
+        }
+        .navbar-brand { font-weight: 700; letter-spacing: 0.5px; font-size: 1.3rem; }
+        .navbar-custom .nav-link {
+            font-weight: 500;
+            border-radius: 8px;
+            padding: 8px 14px;
+            margin-left: 4px;
+            transition: background-color 0.2s;
+        }
+        .navbar-custom .nav-link:hover { background-color: rgba(255,255,255,0.12); }
+        .navbar-custom .nav-link.active {
+            background-color: rgba(255,255,255,0.22);
+            color: #fff;
+        }
+
+        /* Cards Modernos */
+        .card-modern {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.04);
+            background: #fff;
+        }
+        .card-header-modern {
+            background-color: transparent;
+            border-bottom: 2px solid var(--cor-fundo);
+            padding: 20px;
+            font-weight: 600;
+            color: var(--cor-primaria);
+            font-size: 1.1rem;
+        }
+
+        /* Botões */
+        .btn-modern {
+            background-color: var(--cor-secundaria);
+            color: white;
+            border-radius: 8px;
+            font-weight: 500;
+            padding: 10px 20px;
+            transition: all 0.3s;
+            border: none;
+        }
+        .btn-modern:hover {
+            background-color: var(--cor-primaria);
+            color: white;
+            box-shadow: 0 4px 10px rgba(31, 78, 120, 0.3);
+        }
+
+        /* Inputs */
+        .form-control, .form-select {
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            padding: 12px 15px;
+            background-color: #f8fafc;
+        }
+        .form-control:focus, .form-select:focus {
+            background-color: #fff;
+            border-color: var(--cor-secundaria);
+            box-shadow: 0 0 0 0.25rem rgba(47, 85, 151, 0.15);
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom mb-5">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('index') }}">
+                <i class="bi bi-music-note-list me-2"></i> IEAV Louvor
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-label="Abrir menu">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'index' %}active{% endif %}" href="{{ url_for('index') }}">
+                            <i class="bi bi-journal-text me-1"></i> Repertório Geral
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'nova_musica' %}active{% endif %}" href="{{ url_for('nova_musica') }}">
+                            <i class="bi bi-plus-circle me-1"></i> Nova Música
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'cronograma' %}active{% endif %}" href="{{ url_for('cronograma') }}">
+                            <i class="bi bi-calendar-event me-1"></i> Cronograma Mensal
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <div class="container pb-5">
+        {% block content %}{% endblock %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {% block scripts %}{% endblock %}
+
+    <!-- Service Worker para permitir instalação no ecrã inicial -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('Service Worker registado com sucesso!'))
+                    .catch(err => console.error('Erro ao registar Service Worker:', err));
+            });
+        }
+    </script>
+</body>
+</html>

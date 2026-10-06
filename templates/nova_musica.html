@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6 col-md-8">
+        <div class="card card-modern">
+            <div class="card-header-modern">
+                <i class="bi bi-plus-circle me-2"></i> Nova Música
+            </div>
+            <div class="card-body p-4">
+                <form action="{{ url_for('adicionar_musica') }}" method="POST">
+                    <div class="mb-3">
+                        <label class="form-label text-muted small fw-bold text-uppercase">Título da Música</label>
+                        <input type="text" class="form-control" name="titulo" placeholder="Ex: Bondade de Deus" required autofocus>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small fw-bold text-uppercase">Tom</label>
+                        <input type="text" class="form-control" name="tom" placeholder="Ex: A, G#m...">
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label text-muted small fw-bold text-uppercase">Link (Youtube/Spotify)</label>
+                        <input type="text" class="form-control" name="link" placeholder="https://...">
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a href="{{ url_for('index') }}" class="btn btn-light rounded-3 px-4">Cancelar</a>
+                        <button type="submit" class="btn btn-modern flex-grow-1">
+                            <i class="bi bi-check2-circle me-1"></i> Salvar no Repertório
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .table-custom { border-collapse: separate; border-spacing: 0 8px; margin-top: -8px; }
+    .table-custom tr { background-color: white; box-shadow: 0 2px 6px rgba(0,0,0,0.02); transition: all 0.2s; }
+    .table-custom tr:hover { transform: translateX(5px); box-shadow: 0 4px 10px rgba(0,0,0,0.06); }
+    .table-custom td, .table-custom th { border: none; padding: 16px 20px; vertical-align: middle; }
+    .table-custom td:first-child, .table-custom th:first-child { border-radius: 10px 0 0 10px; }
+    .table-custom td:last-child, .table-custom th:last-child { border-radius: 0 10px 10px 0; }
+    .badge-tom { background-color: #e2e8f0; color: var(--cor-primaria); font-size: 0.9rem; padding: 6px 12px; border-radius: 6px; }
+    .btn-action { border-radius: 6px; padding: 5px 10px; }
+    @media (max-width: 575px) {
+        .table-custom td { padding: 12px 8px; }
+        .table-custom tr:hover { transform: none; }
+        .btn-action { padding: 5px 6px; }
+    }
+</style>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <h4 class="fw-bold mb-0" style="color: var(--cor-primaria);">Repertório Geral (A-Z)</h4>
+        <span class="text-muted small">{{ musicas|length }} músicas cadastradas</span>
+    </div>
+    <div class="d-flex gap-2 flex-grow-1 flex-md-grow-0">
+        <input type="search" id="busca" class="form-control" style="min-width: 0;" placeholder="Buscar música...">
+        <a href="{{ url_for('nova_musica') }}" class="btn btn-modern text-nowrap">
+            <i class="bi bi-plus-circle me-1"></i> Nova Música
+        </a>
+    </div>
+</div>
+
+<table class="table table-custom w-100">
+    <tbody id="lista-musicas">
+        {% for musica in musicas %}
+        <tr data-titulo="{{ musica['titulo']|lower }}">
+            <td class="fw-medium">{{ musica['titulo'] }}</td>
+            <td width="80" class="text-center">
+                {% if musica['tom'] %}
+                    <span class="badge badge-tom fw-bold">{{ musica['tom'] }}</span>
+                {% else %}
+                    <span class="text-muted small">-</span>
+                {% endif %}
+            </td>
+            <td width="150" class="text-end text-nowrap">
+                {% if musica['link'] %}
+                <a href="{{ musica['link'] }}" target="_blank" rel="noopener" class="btn btn-outline-primary btn-action border-0" title="Ouvir">
+                    <i class="bi bi-play-circle-fill fs-5"></i>
+                </a>
+                {% endif %}
+
+                <button type="button" class="btn btn-outline-secondary btn-action border-0" data-bs-toggle="modal" data-bs-target="#editModal{{ musica['id'] }}" title="Editar">
+                    <i class="bi bi-pencil-square fs-5"></i>
+                </button>
+
+                <form action="{{ url_for('deletar_musica', id=musica['id']) }}" method="POST" class="d-inline" onsubmit="return confirm('Tem certeza que deseja apagar essa música do repertório?');">
+                    <button type="submit" class="btn btn-outline-danger btn-action border-0" title="Apagar">
+                        <i class="bi bi-trash fs-5"></i>
+                    </button>
+                </form>
+            </td>
+        </tr>
+        {% else %}
+        <tr>
+            <td colspan="3" class="text-center text-muted py-5">
+                <i class="bi bi-inbox fs-1 d-block mb-2 text-light"></i>
+                O repertório está vazio. <a href="{{ url_for('nova_musica') }}">Adicione a primeira música.</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Modais de edição (fora da tabela, para o HTML ficar válido) -->
+{% for musica in musicas %}
+<div class="modal fade" id="editModal{{ musica['id'] }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0" style="border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+            <div class="modal-header border-bottom-0 pb-0">
+                <h5 class="modal-title fw-bold" style="color: var(--cor-primaria);">Editar Música</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <form action="{{ url_for('editar_musica', id=musica['id']) }}" method="POST">
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label text-muted small fw-bold">TÍTULO</label>
+                        <input type="text" class="form-control" name="titulo" value="{{ musica['titulo'] }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small fw-bold">TOM</label>
+                        <input type="text" class="form-control" name="tom" value="{{ musica['tom'] or '' }}">
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label text-muted small fw-bold">LINK (Youtube/Spotify)</label>
+                        <input type="text" class="form-control" name="link" value="{{ musica['link'] or '' }}">
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 pt-0 pb-4 pe-4">
+                    <button type="button" class="btn btn-light rounded-3" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-modern">Salvar Alterações</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<script>
+    // Filtro de busca no repertório
+    document.getElementById('busca').addEventListener('input', function () {
+        const termo = this.value.toLowerCase().trim();
+        document.querySelectorAll('#lista-musicas tr[data-titulo]').forEach(function (tr) {
+            tr.style.display = tr.dataset.titulo.includes(termo) ? '' : 'none';
+        });
+    });
+</script>
+{% endblock %}

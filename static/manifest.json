@@ -1,0 +1,20 @@
+{
+  "name": "IEAV - Gestão de Louvor",
+  "short_name": "IEAV Louvor",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f4f7f6",
+  "theme_color": "#1F4E78",
+  "icons": [
+    {
+      "src": "icone-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icone-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
