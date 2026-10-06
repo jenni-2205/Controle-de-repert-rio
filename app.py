@@ -2,10 +2,15 @@ import calendar
 import sqlite3
 from datetime import date
 
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, send_from_directory, url_for
 
 app = Flask(__name__)
 DB_NAME = 'repertorio_ieav.db'
+
+@app.route('/sw.js')
+def sw():
+    # Retorna o ficheiro sw.js que está dentro da pasta static
+    return send_from_directory(app.static_folder, 'sw.js')
 
 MESES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
          'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
