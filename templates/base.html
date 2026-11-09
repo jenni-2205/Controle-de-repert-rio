@@ -5,113 +5,285 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IEAV - Gestão de Louvor</title>
     
-    <!-- Configurações PWA (Aplicativo) -->
+    <!-- Configurações PWA e Favicon (Ícone da aba) -->
     <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
-    <meta name="theme-color" content="#1F4E78">
+    <meta name="theme-color" content="#ffffff">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="{{ url_for('static', filename='icone-192.png') }}">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    
+    <!-- Ícone da Aba do Navegador -->
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='logo_ieav-removebg-preview.png') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='logo_ieav-removebg-preview.png') }}">
 
-    <!-- Bootstrap CSS -->
+    <!-- Bootstrap CSS & Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-    <!-- Google Fonts: Poppins -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
         :root {
-            --cor-primaria: #1F4E78;
-            --cor-secundaria: #2F5597;
-            --cor-fundo: #f4f7f6;
-            --cor-texto: #333;
+            /* Cores Estruturais */
+            --bg-color: #f7f7f7;
+            --surface-color: #ffffff;
+            --border-color: rgba(0, 0, 0, 0.08);
+            
+            /* Tipografia */
+            --text-main: #111111;
+            --text-muted: #666666;
+            
+            /* Paleta da Marca */
+            --brand-red: #d5000a;
+            --brand-bright-red: #f62904;
+            --brand-orange: #f78b03;
+            --brand-yellow: #f7e401;
+            --action-black: #000000;
         }
+        
         body {
-            font-family: 'Poppins', sans-serif;
-            background-color: var(--cor-fundo);
-            color: var(--cor-texto);
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            -webkit-font-smoothing: antialiased;
+            position: relative;
+            min-height: 100vh;
         }
 
-        /* Navbar com Degradê */
+        /* =========================================
+           AMBIENT GLOW (Luzes de fundo suaves)
+        ========================================= */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -15%; left: -10%;
+            width: 50vw; height: 50vw;
+            background: radial-gradient(circle, rgba(247, 139, 3, 0.04) 0%, transparent 60%);
+            border-radius: 50%;
+            z-index: -1;
+            pointer-events: none;
+        }
+        body::after {
+            content: '';
+            position: fixed;
+            bottom: -15%; right: -10%;
+            width: 60vw; height: 60vw;
+            background: radial-gradient(circle, rgba(213, 0, 10, 0.03) 0%, transparent 60%);
+            border-radius: 50%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* Linha de Assinatura no Topo */
+        .brand-top-line {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--brand-red), var(--brand-orange), var(--brand-yellow));
+            z-index: 1060;
+        }
+
+        /* =========================================
+           NAVBAR: Efeito Glassmorphism (Vidro)
+        ========================================= */
         .navbar-custom {
-            background: linear-gradient(135deg, var(--cor-primaria) 0%, var(--cor-secundaria) 100%);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            padding: 15px 0;
+            background-color: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 12px 0;
+            margin-top: 3px;
+            position: sticky;
+            top: 3px;
+            z-index: 1050;
         }
-        .navbar-brand { font-weight: 700; letter-spacing: 0.5px; font-size: 1.3rem; }
+        
+        .navbar-brand { 
+            font-weight: 700; 
+            font-size: 1.2rem; 
+            color: var(--text-main) !important;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+        }
+
+        /* Logo Customizada */
+        .brand-logo-img {
+            height: 48px;
+            width: auto;
+            object-fit: contain;
+            transition: transform 0.3s ease;
+        }
+        .navbar-brand:hover .brand-logo-img {
+            transform: scale(1.05);
+        }
+
         .navbar-custom .nav-link {
+            color: var(--text-muted);
             font-weight: 500;
+            font-size: 0.95rem;
+            padding: 8px 16px;
+            margin-left: 8px;
             border-radius: 8px;
-            padding: 8px 14px;
-            margin-left: 4px;
-            transition: background-color 0.2s;
+            transition: all 0.3s ease;
+            position: relative;
         }
-        .navbar-custom .nav-link:hover { background-color: rgba(255,255,255,0.12); }
+
+        .navbar-custom .nav-link:hover { 
+            color: var(--text-main);
+            background-color: rgba(0,0,0,0.03);
+        }
+
+        /* Aba Ativa com Destaque Subtil */
         .navbar-custom .nav-link.active {
-            background-color: rgba(255,255,255,0.22);
-            color: #fff;
-        }
-
-        /* Cards Modernos */
-        .card-modern {
-            border: none;
-            border-radius: 12px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.04);
-            background: #fff;
-        }
-        .card-header-modern {
-            background-color: transparent;
-            border-bottom: 2px solid var(--cor-fundo);
-            padding: 20px;
+            color: var(--brand-red);
             font-weight: 600;
-            color: var(--cor-primaria);
-            font-size: 1.1rem;
+            background-color: transparent;
+        }
+        .navbar-custom .nav-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: 4px; left: 16px; right: 16px;
+            height: 3px;
+            background: var(--brand-red);
+            border-radius: 2px;
+            opacity: 0.8;
         }
 
-        /* Botões */
+        /* =========================================
+           CARDS E TABELAS: Efeito "Hover Vivo"
+        ========================================= */
+        .card-modern, .table-custom tr {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* A Mágica: Linha colorida que aparece ao passar o mouse */
+        .card-modern::before, .table-custom tr::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--brand-red), var(--brand-orange));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 10;
+        }
+
+        .card-modern:hover, .table-custom tr:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+            border-color: transparent;
+        }
+        
+        .card-modern:hover::before, .table-custom tr:hover::before {
+            opacity: 1;
+        }
+
+        .card-header-modern {
+            background: transparent;
+            border-bottom: 1px solid var(--border-color);
+            padding: 20px 24px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: var(--text-main);
+        }
+
+        /* =========================================
+           BOTÕES E INPUTS
+        ========================================= */
         .btn-modern {
-            background-color: var(--cor-secundaria);
-            color: white;
+            background-color: var(--action-black);
+            color: var(--surface-color);
             border-radius: 8px;
             font-weight: 500;
-            padding: 10px 20px;
-            transition: all 0.3s;
+            padding: 10px 22px;
             border: none;
-        }
-        .btn-modern:hover {
-            background-color: var(--cor-primaria);
-            color: white;
-            box-shadow: 0 4px 10px rgba(31, 78, 120, 0.3);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }
 
-        /* Inputs */
+        .btn-modern:hover {
+            background-color: var(--brand-red);
+            color: var(--surface-color);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(213, 0, 10, 0.25);
+        }
+
         .form-control, .form-select {
             border-radius: 8px;
-            border: 1px solid #e2e8f0;
-            padding: 12px 15px;
-            background-color: #f8fafc;
+            border: 1.5px solid var(--border-color);
+            padding: 12px 16px;
+            background-color: var(--surface-color);
+            color: var(--text-main);
+            box-shadow: none;
+            transition: all 0.2s ease;
         }
+        
         .form-control:focus, .form-select:focus {
-            background-color: #fff;
-            border-color: var(--cor-secundaria);
-            box-shadow: 0 0 0 0.25rem rgba(47, 85, 151, 0.15);
+            background-color: var(--surface-color);
+            border-color: var(--brand-orange);
+            box-shadow: 0 0 0 4px rgba(247, 139, 3, 0.1);
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        /* =========================================
+           ANIMAÇÃO DE ENTRADA DO CONTEÚDO
+        ========================================= */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .page-content {
+            animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* =========================================
+           CORREÇÃO DE Z-INDEX PARA MODAIS BOOTSTRAP
+        ========================================= */
+        .modal-backdrop {
+            z-index: 1040 !important;
+        }
+        .modal {
+            z-index: 1055 !important;
         }
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom mb-5">
+    <!-- Linha Degradê Absoluta -->
+    <div class="brand-top-line"></div>
+
+    <!-- Navbar com Glassmorphism -->
+    <nav class="navbar navbar-expand-lg navbar-light navbar-custom mb-5">
         <div class="container">
             <a class="navbar-brand" href="{{ url_for('index') }}">
-                <i class="bi bi-music-note-list me-2"></i> IEAV Louvor
+                <!-- LOGO INSERIDA AQUI -->
+                <img src="{{ url_for('static', filename='logo_ieav-removebg-preview.png') }}" alt="Logo IEAV" class="brand-logo-img me-2">
+                IEAV Louvor
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-label="Abrir menu">
+            
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
+            
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
+                <ul class="navbar-nav ms-auto mt-3 mt-lg-0">
                     <li class="nav-item">
                         <a class="nav-link {% if request.endpoint == 'index' %}active{% endif %}" href="{{ url_for('index') }}">
-                            <i class="bi bi-journal-text me-1"></i> Repertório Geral
+                            <i class="bi bi-journal-text me-1"></i> Repertório
                         </a>
                     </li>
                     <li class="nav-item">
@@ -121,27 +293,34 @@
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {% if request.endpoint == 'cronograma' %}active{% endif %}" href="{{ url_for('cronograma') }}">
-                            <i class="bi bi-calendar-event me-1"></i> Cronograma Mensal
+                            <i class="bi bi-calendar2-week me-1"></i> Cronograma
                         </a>
                     </li>
                 </ul>
             </div>
         </div>
     </nav>
-    <div class="container pb-5">
+    
+    <!-- Envolvemos o conteúdo dinâmico na div de animação -->
+    <div class="container pb-5 page-content">
         {% block content %}{% endblock %}
     </div>
 
+    <!-- Script do Bootstrap -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     {% block scripts %}{% endblock %}
 
-    <!-- Service Worker para permitir instalação no ecrã inicial -->
+    <!-- Correção de Modais e Service Worker -->
     <script>
+        // Move todos os modais para a raiz do documento para evitar o bug da tela escura
+        document.querySelectorAll('.modal').forEach(modal => {
+            document.body.appendChild(modal);
+        });
+
+        // Registro do Aplicativo (PWA)
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
-                    .then(reg => console.log('Service Worker registado com sucesso!'))
-                    .catch(err => console.error('Erro ao registar Service Worker:', err));
+                navigator.serviceWorker.register('/sw.js').catch(err => console.error(err));
             });
         }
     </script>
