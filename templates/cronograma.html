@@ -96,6 +96,40 @@
 
     .badge-custom { font-weight: 600; padding: 6px 10px; border-radius: 6px; font-size: 0.75rem; letter-spacing: 0.3px; }
 
+    /* =========================================
+       BARRA DE ROLAGEM CUSTOMIZADA (PC E CELULAR)
+    ========================================= */
+    .modal-body, .picker {
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        /* Suporte para Mozilla Firefox */
+        scrollbar-width: thin;
+        scrollbar-color: #d1d5db transparent;
+    }
+    
+    /* Limita a altura do modal no PC e Celular para forçar a rolagem interna */
+    .modal-body {
+        max-height: 60vh; 
+    }
+
+    /* Desenho da barra de rolagem (Chrome, Edge, Safari) */
+    .modal-body::-webkit-scrollbar, .picker::-webkit-scrollbar {
+        width: 8px; /* Um pouco mais grossa para o rato no PC */
+    }
+    .modal-body::-webkit-scrollbar-track, .picker::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.02); /* Fundo super discreto */
+        border-radius: 10px;
+    }
+    .modal-body::-webkit-scrollbar-thumb, .picker::-webkit-scrollbar-thumb {
+        background: #d1d5db;
+        border-radius: 10px;
+        border: 2px solid transparent; /* Dá um efeito de margem na barra */
+        background-clip: padding-box;
+    }
+    .modal-body::-webkit-scrollbar-thumb:hover, .picker::-webkit-scrollbar-thumb:hover {
+        background-color: var(--brand-orange);
+    }
+
     @media (max-width: 767px) {
         .cal-grid { gap: 4px; }
         .cal-head { font-size: 0.7rem; padding: 4px 0; }
