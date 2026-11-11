@@ -103,10 +103,14 @@
         .cal-num { font-size: 0.85rem; }
         .cal-add { top: 0; right: 0; font-size: 1.2rem; padding: 4px 8px; }
         
+        /* LINHA NOVA: Limita a altura da lista de músicas no telemóvel */
+        .picker { max-height: 180px; }
+        
         /* Mobile: Bolinhas coloridas ao invés de texto */
         .cal-eventos { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
         .cal-evento { width: 12px; height: 12px; padding: 0; margin: 0; border-radius: 50%; font-size: 0; border: none; }
         .cal-evento.ev-Semanal  { background: var(--brand-red); }
+        .cal-evento.ev-Mensal   { background: var(--action-black); }
         .cal-evento.ev-Especial { background: var(--brand-orange); }
     }
 </style>
@@ -352,7 +356,14 @@
     document.getElementById('busca-picker').addEventListener('input', function () {
         const termo = this.value.toLowerCase().trim();
         document.querySelectorAll('.picker .form-check').forEach(function (el) {
-            el.style.display = el.dataset.titulo.includes(termo) ? '' : 'none';
+            // Agora usamos as classes do próprio Bootstrap para forçar a música a sumir ou aparecer
+            if (el.dataset.titulo.includes(termo)) {
+                el.classList.remove('d-none');
+                el.classList.add('d-flex');
+            } else {
+                el.classList.remove('d-flex');
+                el.classList.add('d-none'); // d-none força o elemento a sumir de verdade
+            }
         });
     });
 
